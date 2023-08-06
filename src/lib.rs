@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
 
@@ -31,8 +32,9 @@ pub fn main_js() -> Result<(), JsValue> {
                 Position { x: 0.0, y: 600.0 },
                 Position { x: 600.0, y: 600.0 },
             ],
+            color: rdn_color(),
         },
-        7,
+        6,
     );
     Ok(())
 }
@@ -43,16 +45,27 @@ struct Position {
     y: f64,
 }
 
+#[derive(Clone, Copy)]
+struct Color {
+    r: u8,
+    g: u8,
+    b: u8,
+}
+
+#[derive(Clone, Copy)]
 struct Triangle {
     points: [Position; 3],
+    color: Color,
 }
 
 fn sierpinski(context: &web_sys::CanvasRenderingContext2d, points: Triangle, depth: u32) {
+    draw_triangle(&context, points);
     if depth == 0 {
-        draw_triangle(&context, points);
         return;
     }
-    let [top, left, right] = points.points;
+    let [top, left, right] = points.points.clone();
+
+    let next_color = rdn_color();
     let left_middle = Position {
         x: (top.x + left.x) / 2.0,
         y: (top.y + left.y) / 2.0,
@@ -70,12 +83,15 @@ fn sierpinski(context: &web_sys::CanvasRenderingContext2d, points: Triangle, dep
 
     let top_triangle = Triangle {
         points: [top, left_middle, right_middle],
+        color: next_color,
     };
     let left_triangle = Triangle {
         points: [left, left_middle.clone(), bottom_middle],
+        color: next_color.clone(),
     };
     let right_triangle = Triangle {
         points: [right, right_middle.clone(), bottom_middle.clone()],
+        color: next_color.clone(),
     };
     sierpinski(&context, top_triangle, depth - 1);
     sierpinski(&context, left_triangle, depth - 1);
@@ -84,6 +100,10 @@ fn sierpinski(context: &web_sys::CanvasRenderingContext2d, points: Triangle, dep
 
 fn draw_triangle(context: &web_sys::CanvasRenderingContext2d, points: Triangle) {
     let [top, left, right] = points.points;
+    context.set_fill_style(&JsValue::from_str(&format!(
+        "rgb({}, {}, {})",
+        points.color.r, points.color.g, points.color.b
+    )));
     context.move_to(top.x, top.y);
     context.begin_path();
     context.line_to(left.x, left.y);
@@ -91,4 +111,14 @@ fn draw_triangle(context: &web_sys::CanvasRenderingContext2d, points: Triangle) 
     context.line_to(top.x, top.y);
     context.close_path();
     context.stroke();
+    context.fill();
+}
+
+fn rdn_color() -> Color {
+    let mut rng = thread_rng();
+    Color {
+        r: rng.gen_range(0..255),
+        g: rng.gen_range(0..255),
+        b: rng.gen_range(0..255),
+    }
 }

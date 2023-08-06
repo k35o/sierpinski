@@ -20,7 +20,7 @@ pub fn main_js() -> Result<(), JsValue> {
 
     sierpinski(
         &context,
-        Triangle {
+        &Triangle {
             points: [
                 Position { x: 300.0, y: 0.0 },
                 Position { x: 0.0, y: 600.0 },
@@ -33,31 +33,30 @@ pub fn main_js() -> Result<(), JsValue> {
     Ok(())
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 struct Position {
     x: f64,
     y: f64,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Copy, Clone)]
 struct Color {
     r: u8,
     g: u8,
     b: u8,
 }
 
-#[derive(Clone, Copy)]
 struct Triangle {
     points: [Position; 3],
     color: Color,
 }
 
-fn sierpinski(context: &web_sys::CanvasRenderingContext2d, points: Triangle, depth: u32) {
+fn sierpinski(context: &web_sys::CanvasRenderingContext2d, points: &Triangle, depth: u32) {
     draw_triangle(&context, points);
     if depth == 0 {
         return;
     }
-    let [top, left, right] = points.points.clone();
+    let [top, left, right] = &points.points;
 
     let next_color = rdn_color();
     let left_middle = Position {
@@ -76,24 +75,24 @@ fn sierpinski(context: &web_sys::CanvasRenderingContext2d, points: Triangle, dep
     };
 
     let top_triangle = Triangle {
-        points: [top, left_middle, right_middle],
+        points: [top.clone(), left_middle.clone(), right_middle.clone()],
         color: next_color,
     };
     let left_triangle = Triangle {
-        points: [left, left_middle.clone(), bottom_middle],
+        points: [left.clone(), left_middle.clone(), bottom_middle.clone()],
         color: next_color.clone(),
     };
     let right_triangle = Triangle {
-        points: [right, right_middle.clone(), bottom_middle.clone()],
+        points: [right.clone(), right_middle.clone(), bottom_middle.clone()],
         color: next_color.clone(),
     };
-    sierpinski(&context, top_triangle, depth - 1);
-    sierpinski(&context, left_triangle, depth - 1);
-    sierpinski(&context, right_triangle, depth - 1);
+    sierpinski(&context, &top_triangle, depth - 1);
+    sierpinski(&context, &left_triangle, depth - 1);
+    sierpinski(&context, &right_triangle, depth - 1);
 }
 
-fn draw_triangle(context: &web_sys::CanvasRenderingContext2d, points: Triangle) {
-    let [top, left, right] = points.points;
+fn draw_triangle(context: &web_sys::CanvasRenderingContext2d, points: &Triangle) {
+    let [top, left, right] = &points.points;
     context.set_fill_style(&JsValue::from_str(&format!(
         "rgb({}, {}, {})",
         points.color.r, points.color.g, points.color.b

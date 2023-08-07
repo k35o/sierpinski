@@ -1,4 +1,4 @@
-## suerpinski
+## sierpinski
 <img width="609" alt="スクリーンショット 2023-08-07 0 25 09" src="https://github.com/k35o/sierpinski/assets/61353435/2722fc87-cc69-40e5-bf1e-59d1f267e8ab">
 
 ## How to install
